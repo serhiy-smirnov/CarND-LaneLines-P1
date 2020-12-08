@@ -24,19 +24,17 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/gray.jpg "Converted to grayscale"
-[image2]: ./examples/blurred.jpg "Blurred"
-[image3]: ./examples/edges.jpg "Edges detected"
-[image4]: ./examples/region.jpg "Region masked"
-[image5]: ./examples/raw_lines.jpg "Example of output result with raw detected lines"
-[image6]: ./examples/annotated.jpg "Example of output result with stabilized lines"
-
----
+[image1]: ./examples/gray.png "Converted to grayscale"
+[image2]: ./examples/blurred.png "Blurred"
+[image3]: ./examples/edges.png "Edges detected"
+[image4]: ./examples/region.png "Region masked"
+[image5]: ./examples/raw_lines.png "Example of output result with raw detected lines"
+[image6]: ./examples/annotated.png "Example of output result with stabilized lines"
 
 Reflection on the project results
 ---
 
-#### 1. Image processing pipeline
+### 1. Image processing pipeline
 
 My pipeline consisted of 8 steps.
 
@@ -65,7 +63,8 @@ My pipeline consisted of 8 steps.
 
 * At this place I've modified default pipline offered in the example and introduced a function to filter and stabilize detected lines over time
 
-    	def filter_lines(lines, include_filtered_lines = True, include_raw_lines = False, min_slope = 0.5, max_slope = 2, stabilization_slope_diff = 0.03):
+    	def filter_lines(lines, include_filtered_lines = True, include_raw_lines = False,
+                         min_slope = 0.5, max_slope = 2, stabilization_slope_diff = 0.03):
         	"""
 	        Input: lines detected by the Hough algorithm
         	Output: filtered and stabilized lines on the left and right sides
@@ -84,11 +83,14 @@ My pipeline consisted of 8 steps.
 	        """
 
 	After dividing the lines into two groups (left/right) based on the slope, it filters by specified thresholds to reject the lines that are too close to horizontal or vertical (which are not likely to be lane marking lines).
+
 	Then the function uses linear least-squares regression to find parameters of the line approximating given set of points from detected lane lines.
+
 	History buffer is maintained and can contained specified number of samples for the approximated lines parameters.
 	This helps to implement additional filtration of the approximated line to exclude the results differ too much from the detection history. By tuning the parameter 'stabilization_slope_diff' you can exclude case of obvious misdetections while maintaining good continuity of the resulting line detection.
 	Size of the buffer for temporal stabilization can be configured using a helper function 'init_detection'.
 	By increasing the buffer size, smoothness of the resulting detection is increasing, but that also adds latency to the output visualization.
+
 	For the output you can choose to include stabilized and/or raw lines, configure minimum and maximum slope as well as slope difference for filtration (see pictures below).
 
 * New image of a corresponding size is initialized with zeroes and 'draw_lines' function is used to render resulting lines on the left and on the right side.
@@ -99,7 +101,7 @@ My pipeline consisted of 8 steps.
 ![alt text][image6]
 
 
-##### 2. Potential shortcomings with my current pipeline
+### 2. Potential shortcomings with my current pipeline
 
 
 One potential shortcoming of the pipeline described above is the simple approximation of the lanes using linear regression and producing result consisting of a single line while the lanes can have certain curvature based on the road situation, even in quite limited region of interest.

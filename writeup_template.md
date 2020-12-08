@@ -14,8 +14,7 @@ To complete the project, two files will be submitted: a file containing project 
 
 To meet specifications in the project, take a look at the requirements in the [project rubric](https://review.udacity.com/#!/rubrics/322/view)
 
-# **Project goals** 
-
+Project goals
 ---
 
 The goals / steps of this project are the following:
@@ -34,9 +33,10 @@ The goals / steps of this project are the following:
 
 ---
 
-### Reflection
+Reflection on the project results
+---
 
-### 1. Describe your pipeline. As part of the description, explain how you modified the draw_lines() function.
+#### 1. Image processing pipeline
 
 My pipeline consisted of 8 steps.
 
@@ -47,48 +47,49 @@ My pipeline consisted of 8 steps.
 ![alt text][image2]
 
 * I detect edges in the image using Canny Edge Detection algrithm (developed by John F. Canny)
-![alt text][image3]
-I use values 50 for the low threshold and 150 for the high threshold
+	![alt text][image3]
+	I use values 50 for the low threshold and 150 for the high threshold
 
 * Then I mask region of interest based on the specific image or video clip
 ![alt text][image4]
-I try to be resolution agnostic and calculate the region based on the image size, though adaptations may be required based on the image aspect ration and camera parameters (mounting position, orientation, FoV etc)
+	I try to be resolution agnostic and calculate the region based on the image size, though adaptations may be required based on the image aspect ration and camera parameters (mounting position, orientation, FoV etc)
 
 * Now I'm ready to run Probabilistic Hough Transform to detect the lines 'cv2.HoughLinesP'.
-I use the following parameters:
+	I use the following parameters:
 
-    rho = 1
-    theta = np.pi/180
-    threshold = 35
-    min_line_length = 30
-    max_line_gap = 15
+	    rho = 1
+	    theta = np.pi/180
+	    threshold = 35
+	    min_line_length = 30
+	    max_line_gap = 15
 
 * At this place I've modified default pipline offered in the example and introduced a function to filter and stabilize detected lines over time
 
-    def filter_lines(lines, include_filtered_lines = True, include_raw_lines = False, min_slope = 0.5, max_slope = 2, stabilization_slope_diff = 0.03):
-        """
-        Input: lines detected by the Hough algorithm
-        Output: filtered and stabilized lines on the left and right sides
+    	def filter_lines(lines, include_filtered_lines = True, include_raw_lines = False, min_slope = 0.5, max_slope = 2, stabilization_slope_diff = 0.03):
+        	"""
+	        Input: lines detected by the Hough algorithm
+        	Output: filtered and stabilized lines on the left and right sides
     
-        Pipeline for the lines filtering:
-        1. Divide detected lines into left and right according to the slope
-        2. Filter detected lines:
-            - remove lines with too small or too big slope
-            - remove left lines detected on the right side of the image and vice versa
-        3. Approximate all the lines with linear regression to find an average line
-        4. Filter results of linear regression using mean slope value of history buffer
-            - if current slope value differs form the mean slope value for more than specified threshold - skip it
-            - otherwise - add current slope into the history buffer
-        5. Use mean values (slope, intercept) of the updated history buffer to generate current approximation line
+	        Pipeline for the lines filtering:
+        	1. Divide detected lines into left and right according to the slope
+	        2. Filter detected lines:
+        	    - remove lines with too small or too big slope
+	            - remove left lines detected on the right side of the image and vice versa
+        	3. Approximate all the lines with linear regression to find an average line
+	        4. Filter results of linear regression using mean slope value of history buffer
+        	    - if current slope value differs form the mean slope value for more than specified threshold - skip it
+	            - otherwise - add current slope into the history buffer
+        	5. Use mean values (slope, intercept) of the updated history buffer to generate current approximation line
         
-        """
-After dividing the lines into two groups (left/right) based on the slope, it filters by specified thresholds to reject the lines that are too close to horizontal or vertical (which are not likely to be lane marking lines).
-Then the function uses linear least-squares regression to find parameters of the line approximating given set of points from detected lane lines.
-History buffer is maintained and can contained specified number of samples for the approximated lines parameters.
-This helps to implement additional filtration of the approximated line to exclude the results differ too much from the detection history. By tuning the parameter 'stabilization_slope_diff' you can exclude case of obvious misdetections while maintaining good continuity of the resulting line detection.
-Size of the buffer for temporal stabilization can be configured using a helper function 'init_detection'.
-By increasing the buffer size, smoothness of the resulting detection is increasing, but that also adds latency to the output visualization.
-For the output you can choose to include stabilized and/or raw lines, configure minimum and maximum slope as well as slope difference for filtration (see pictures below).
+	        """
+
+	After dividing the lines into two groups (left/right) based on the slope, it filters by specified thresholds to reject the lines that are too close to horizontal or vertical (which are not likely to be lane marking lines).
+	Then the function uses linear least-squares regression to find parameters of the line approximating given set of points from detected lane lines.
+	History buffer is maintained and can contained specified number of samples for the approximated lines parameters.
+	This helps to implement additional filtration of the approximated line to exclude the results differ too much from the detection history. By tuning the parameter 'stabilization_slope_diff' you can exclude case of obvious misdetections while maintaining good continuity of the resulting line detection.
+	Size of the buffer for temporal stabilization can be configured using a helper function 'init_detection'.
+	By increasing the buffer size, smoothness of the resulting detection is increasing, but that also adds latency to the output visualization.
+	For the output you can choose to include stabilized and/or raw lines, configure minimum and maximum slope as well as slope difference for filtration (see pictures below).
 
 * New image of a corresponding size is initialized with zeroes and 'draw_lines' function is used to render resulting lines on the left and on the right side.
 'draw_lines' function is very simple since all the filtering and stabilization logic is implemented in a separate function ('filter_lines')
@@ -98,16 +99,18 @@ For the output you can choose to include stabilized and/or raw lines, configure 
 ![alt text][image6]
 
 
-### 2. Identify potential shortcomings with your current pipeline
+##### 2. Potential shortcomings with my current pipeline
 
 
-Another shortcoming I see is the simple approximation of the lanes using linear regression and producing result consisting of a single line while the lanes can have certain curvature based on the road situation, even in quite limited region of interest.
+One potential shortcoming of the pipeline described above is the simple approximation of the lanes using linear regression and producing result consisting of a single line while the lanes can have certain curvature based on the road situation, even in quite limited region of interest.
 
-One potential shortcoming of the pipeline described above is setting the region of interest more or less manually based on a specific image/video.
+Another shortcoming I see is setting the region of interest more or less manually based on a specific image/video.
 This makes it difficult to use such an approach for different road situations and camera settings.
 
+Also, since Canny edge detection works with the gray image, some part of information is already lost at this step of processing. It can happen that the brightness information is not enough to reliably detect the edges (see example challenge.mp4).
 
-### 3. Suggest possible improvements to your pipeline
+
+### 3. Possible improvements to my pipeline
 
 Possible improvement for the approximation problem would be to sort the line detections by the distance (y-coord), divide then into several segments (2-3, based on number of points and their distribution) and run linear regression on these segments.
 This may let to achieve more precise approximation of the lanes curvature.

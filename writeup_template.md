@@ -39,17 +39,19 @@ Reflection on the project results
 My pipeline consisted of 8 steps.
 
 * First, I convert the image to grayscale
-![alt text][image1]
+	![alt text][image1]
 
 * Then I apply Gaussian blur with kernel size of 5
-![alt text][image2]
+	![alt text][image2]
 
 * I detect edges in the image using Canny Edge Detection algrithm (developed by John F. Canny)
 	![alt text][image3]
+	
 	I use values 50 for the low threshold and 150 for the high threshold
 
 * Then I mask region of interest based on the specific image or video clip
-![alt text][image4]
+	![alt text][image4]
+	
 	I try to be resolution agnostic and calculate the region based on the image size, though adaptations may be required based on the image aspect ration and camera parameters (mounting position, orientation, FoV etc)
 
 * Now I'm ready to run Probabilistic Hough Transform to detect the lines 'cv2.HoughLinesP'.
@@ -92,13 +94,13 @@ My pipeline consisted of 8 steps.
 	By increasing the buffer size, smoothness of the resulting detection is increasing, but that also adds latency to the output visualization.
 
 	For the output you can choose to include stabilized and/or raw lines, configure minimum and maximum slope as well as slope difference for filtration (see pictures below).
+	![alt text][image5]
 
 * New image of a corresponding size is initialized with zeroes and 'draw_lines' function is used to render resulting lines on the left and on the right side.
 'draw_lines' function is very simple since all the filtering and stabilization logic is implemented in a separate function ('filter_lines')
 
 * Original image is blended with the new image containing annotated line detections
-![alt text][image5]
-![alt text][image6]
+	![alt text][image6]
 
 
 ### 2. Potential shortcomings with my current pipeline
